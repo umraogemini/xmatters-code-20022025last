@@ -1,7 +1,6 @@
 # Outputs
-
 output "metric_name" {
-  value = google_logging_metric.log_based_metrics.name
+  value = google_logging_metric.Log_Based_Metrics_DEV.name
 }
 
 output "notification_channels" {
