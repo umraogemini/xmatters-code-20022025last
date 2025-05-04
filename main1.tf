@@ -84,7 +84,7 @@ resource "google_monitoring_alert_policy" "Log_Based_Metrics_DEV" {
 
     condition_threshold {
       filter     = <<EOT
-     resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.Log_Based_Metrics_DEV.nmae}"
+     resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.Log_Based_Metrics_DEV.name}"
      EOT
       duration   = "0s"
       comparison = "COMPARISON_GT"
