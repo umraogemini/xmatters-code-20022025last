@@ -8,9 +8,9 @@ provider "google" {
 # Log-Based Metric Configuration
 # ==============================
 
-resource "google_logging_metric" "demoemailtest" {
-  name        = "Demoemailtest"
-  description = "Demoemailtest"
+resource "google_logging_metric" "Log_Based_Metrics_DEV" {
+  name        = "Kube_Error_Logs"
+  description = "Counts the number of error logs in kube-system namespace"
   project     = var.project_id
 
   filter = <<EOT
@@ -69,8 +69,8 @@ resource "google_monitoring_notification_channel" "email" {
 # Alert Policy Definition
 # =======================
 
-resource "google_monitoring_alert_policy" "demo_email_test1" {
-  display_name = "Demoeamiltest1"
+resource "google_monitoring_alert_policy" "Log_Based_Metrics_DEV" {
+  display_name = "Kube_Error_Logs"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
@@ -80,10 +80,12 @@ resource "google_monitoring_alert_policy" "demo_email_test1" {
   ]
 
   conditions {
-    display_name = "Demoemailtest1"
+    display_name = "Kube_Error_Logs"
 
     condition_threshold {
-      filter     = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.demoemailtest.name}\""
+      filter     = <<EOT
+     resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.Log_Based_Metrics_DEV.nmae}"
+     EOT
       duration   = "0s"
       comparison = "COMPARISON_GT"
 
@@ -102,9 +104,9 @@ resource "google_monitoring_alert_policy" "demo_email_test1" {
   alert_strategy {
     auto_close = "604800s" # 7 days
 
-    notification_rate_limit {
-      period = "60s"
-    }
+    #notification_rate_limit {
+     # period = "60s"
+    #}
   }
 
   documentation {
@@ -122,8 +124,4 @@ EOT
   }
 
   user_labels = {}
-
-  lifecycle {
-    ignore_changes = [creation_record, mutation_record]
-  }
 }
