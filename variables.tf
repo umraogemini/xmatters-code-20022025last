@@ -12,7 +12,7 @@ variable "region" {
 variable "xmatters_webhook_url" {
   description = "Webhook URL for xMatters integration"
   type        = string
-  default     = "https://hap.bank.com/api/sendAlert?@aboutSource=GCP"
+  default     = "https://hap-api.hsbc.co.uk/api/sendAlert?@aboutSource=GCP"
 }
 
 variable "notification_email" {
