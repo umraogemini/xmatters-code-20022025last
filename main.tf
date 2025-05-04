@@ -5,7 +5,7 @@ provider "google" {
 }
 
 # Log-based Metric for K8s container errors
-resource "google_logging_metric" "log_based_metrics" {
+resource "google_logging_metric" "Log_Based_Metrics_DEV" {
   name        = "k8s_error_log_metric"
   description = "Track critical error logs for Kubernetes containers"
 
