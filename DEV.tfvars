@@ -1,3 +1,2 @@
-project_id = "ABCD-12365984-lineplat-dev"
-
-xmatters_webhook_url = "https://hap.bank.com/api/sendAlert?@aboutSource=GCP"
+project_id = "hsbc-12609073-peakplat-dev"
+xmatters_webhook_url = "https://hap-api.hsbc.co.uk/api/sendAlert?@aboutSource=GCP"
