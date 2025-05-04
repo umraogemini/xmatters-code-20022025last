@@ -1,10 +1,9 @@
 pipeline {
     agent any
-
     environment {
         GCP_CREDENTIALS = credentials('gcp-service-account-key') // Service account JSON key
-        TF_VAR_project_id = 'ABCD-12365984-lineplat-dev' // Replace with your GCP project ID
-        TF_VAR_xmatters_webhook_url = 'https://hap.bank.com/api/sendAlert?@aboutSource=GCP' // Replace with your xMatters webhook URL
+        TF_VAR_project_id = 'hsbc-12609073-peakplat-dev' // Replace with your GCP project ID
+        TF_VAR_xmatters_webhook_url = 'https://hap-api.hsbc.co.uk/api/sendAlert?@aboutSource=GCP' // Replace with your xMatters webhook URL
     }
 
     stages {
