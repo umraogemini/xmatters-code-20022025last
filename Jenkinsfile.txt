@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/your-repo/terraform-log-metrics.git' // Replace with your Git repository
+                git 'https://alm-github.systems.uk.hsbc/bff/infrastructure-as-code.git' // Replace with your Git repository
             }
         }
 
