@@ -53,3 +53,33 @@ EOT
 
   user_labels = {}
 }
+
+
+
+
+-----------------------------------------------------------
+
+resource "google_monitoring_alert_policy_condition" "vm_memory_utilization" {
+  display_name = "VM Instance - Memory utilization (OS reported) exceeded 80%"
+  alert_policy = google_monitoring_alert_policy.vm_high_memory_alert.id
+  project      = var.project_id
+
+  condition_threshold {
+    filter = <<EOT
+resource.type = "gce_instance" AND metric.type = "agent.googleapis.com/memory/percent_used" AND metric.labels.state = "used" AND NOT metadata.system_labels.name = monitoring.regex.full_match("nongo.*")
+EOT
+    duration         = "300s"
+    comparison       = "COMPARISON_GT"
+    threshold_value  = 80
+
+    aggregations {
+      alignment_period   = "300s"
+      per_series_aligner = "ALIGN_MEAN"
+    }
+
+    trigger {
+      count = 1
+    }
+  }
+}
+
