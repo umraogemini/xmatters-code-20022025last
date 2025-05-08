@@ -1,0 +1,55 @@
+resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
+  display_name = "VM High Memory Alert"
+  combiner     = "OR"
+  enabled      = true
+  project      = var.project_id
+
+  notification_channels = [
+    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+  ]
+
+  conditions {
+    display_name = "VM Instance - Memory utilization (OS reported) exceeded 80%"
+
+    condition_threshold {
+      filter = <<EOT
+resource.type = "gce_instance"
+AND metric.type = "agent.googleapis.com/memory/percent_used"
+AND metric.labels.state = "used"
+AND NOT metadata.system_labels.name = monitoring.regex.full_match("nongo.*")
+EOT
+      duration         = "300s"
+      comparison       = "COMPARISON_GT"
+      threshold_value  = 80
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  alert_strategy {
+    auto_close = "86400s"
+  }
+
+  documentation {
+    content = <<EOT
+{
+  "severity": "WARNING",
+  "text": "VM Instance - Memory utilization (OS reported) exceeded 80%\\nmetric: agent.googleapis.com/memory/percent_used\\nproject.id: ${var.project_id}\\nzone: \\"\\ninstance.id: \\"",
+  "object": "VMMemory",
+  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+EOT
+    mime_type = "text/markdown"
+  }
+
+  user_labels = {}
+}
