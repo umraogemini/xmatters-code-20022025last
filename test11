@@ -117,9 +117,9 @@ EOT
   user_labels = {}
 }
 
-# ==============================================================
-# VM High Memory Alert Policy & VM Memory utilization conditions
-# ==============================================================
+# =============================================================
+# VM High Memory & Kubernetes Node Resource Alert Policy
+# =============================================================
 resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
   display_name = "VM High Memory Alert"
   combiner     = "OR"
@@ -182,7 +182,7 @@ EOT
     }
   }
 
-  # ✅ New Condition 3: Node Memory > 50%
+  # Condition 3: Node Memory > 50%
   conditions {
     display_name = "Kubernetes Node - Memory allocatable utilization exceeded 50%"
 
@@ -203,28 +203,7 @@ EOT
     }
   }
 
-  alert_strategy {
-    auto_close = "86400s"
-  }
-
-  documentation {
-    content = <<EOT
-{
-  "severity": "WARNING",
-  "text": "VM memory or Kubernetes node memory utilization has crossed thresholds.",
-  "object": "VMMemory | NodeMemory",
-  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
-  "@version": "alertapi-0.1",
-  "@type": "ALERT"
-}
-EOT
-    mime_type = "text/markdown"
-  }
-
-  user_labels = {}
-}
-
-# ✅ New Condition 4: Node CPU > 50%
+  # Condition 4: Node CPU > 50%
   conditions {
     display_name = "Kubernetes Node - CPU allocatable utilization exceeded 50%"
 
@@ -253,8 +232,8 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "VM memory or Kubernetes node memory utilization has crossed thresholds.",
-  "object": "VMMemory | NodeMemory" | NodeCPU",
+  "text": "VM memory or Kubernetes node memory or CPU utilization has crossed thresholds.",
+  "object": "VMMemory | NodeMemory | NodeCPU",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
