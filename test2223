@@ -218,7 +218,7 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Database - CPU utilization exceeded 70%\\nmetric: cloudsql.googleapis.com/database/cpu/utilization\\nproject_id: ${var.project_id}\\nregion: ${var.region}\\ndatabase_id: \${resource.label.database_id}\\ndatabase: \${resource.label.database}",
+  "text": "Cloud SQL Database - CPU utilization exceeded 70%\nmetric: cloudsql.googleapis.com/database/cpu/utilization\nproject_id: ${var.project_id}\nregion: ${var.region}\ndatabase_id: <database_id>\ndatabase: <database_name>",
   "object": "CloudSQLCPU",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
