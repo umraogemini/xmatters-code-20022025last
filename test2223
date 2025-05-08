@@ -9,7 +9,7 @@ provider "google" {
 # ================================
 # Log-Based Metric Configuration
 # ================================
-resource "google_logging_metric" "Log_Based_Metrics_DEV" {
+resource "google_logging_metric" "log_based_metrics_dev" {
   name        = "Kube_Error_Logs"
   description = "Counts the number of error logs in kube-system namespace"
   project     = var.project_id
@@ -64,7 +64,7 @@ resource "google_monitoring_notification_channel" "email" {
 # =============================
 # Log-Based Alert Policy
 # =============================
-resource "google_monitoring_alert_policy" "Log_Based_Metrics_DEV" {
+resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
   display_name = "Kube_Error_Logs"
   combiner     = "OR"
   enabled      = true
@@ -80,7 +80,7 @@ resource "google_monitoring_alert_policy" "Log_Based_Metrics_DEV" {
 
     condition_threshold {
       filter = <<EOT
-resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.Log_Based_Metrics_DEV.name}"
+resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics_dev.name}"
 EOT
       duration   = "0s"
       comparison = "COMPARISON_GT"
