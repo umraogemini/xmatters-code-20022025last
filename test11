@@ -116,119 +116,8 @@ EOT
 }
 
 # =========================================================
-# VM High Memory & Kubernetes Node Resource Alert Policy
-# =========================================================
-resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
-  display_name = "VM High Memory Alert"
-  combiner     = "OR"
-  enabled      = true
-  project      = var.project_id
-
-  notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
-  ]
-
-  dynamic "conditions" {
-    for_each = [
-      {
-        name        = "VM Memory Utilization > 80%"
-        threshold   = 80
-      },
-      {
-        name        = "VM Memory Utilization > 90%"
-        threshold   = 90
-      }
-    ]
-    content {
-      display_name = conditions.value.name
-
-      condition_threshold {
-        filter = <<EOT
-resource.type = "gce_instance"
-AND metric.type = "agent.googleapis.com/memory/percent_used"
-AND metric.labels.state = "used"
-AND NOT metadata.system_labels.name = monitoring.regex.full_match("nongo.*")
-EOT
-        duration         = "300s"
-        comparison       = "COMPARISON_GT"
-        threshold_value  = conditions.value.threshold
-
-        aggregations {
-          alignment_period   = "300s"
-          per_series_aligner = "ALIGN_MEAN"
-        }
-
-        trigger {
-          count = 1
-        }
-      }
-    }
-  }
-
-  # Kubernetes Node Memory Condition
-  conditions {
-    display_name = "Kubernetes Node - Memory allocatable utilization exceeded 50%"
-
-    condition_threshold {
-      filter          = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/memory/allocatable_utilization\""
-      duration        = "0s"
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0.5
-
-      aggregations {
-        alignment_period   = "300s"
-        per_series_aligner = "ALIGN_MAX"
-      }
-
-      trigger {
-        count = 1
-      }
-    }
-  }
-
-  # Kubernetes Node CPU Condition
-  conditions {
-    display_name = "Kubernetes Node - CPU allocatable utilization exceeded 50%"
-
-    condition_threshold {
-      filter          = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/cpu/allocatable_utilization\""
-      duration        = "0s"
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0.5
-
-      aggregations {
-        alignment_period   = "300s"
-        per_series_aligner = "ALIGN_MAX"
-      }
-
-      trigger {
-        count = 1
-      }
-    }
-  }
-
-  alert_strategy {
-    auto_close = "86400s" # 1 day
-  }
-
-  documentation {
-    content = <<EOT
-{
-  "severity": "WARNING",
-  "text": "VM memory or Kubernetes node memory or CPU utilization has crossed thresholds.",
-  "object": "VMMemory | NodeMemory | NodeCPU",
-  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
-  "@version": "alertapi-0.1",
-  "@type": "ALERT"
-}
-EOT
-    mime_type = "text/markdown"
-  }
-}
-
-# =======================================================
 # Cloud SQL Memory Utilization Alert Policy (> 70%)
-# =======================================================
+# =========================================================
 resource "google_monitoring_alert_policy" "cloud_sql_memory_utilization" {
   display_name = "Cloud SQL Memory > 70%-orchestration"
   combiner     = "OR"
@@ -272,7 +161,7 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.\\nmetric: ${google_monitoring_metric.cloud_sql_memory_utilization.name}\\nproject.id: ${var.project_id}\\nregion: ${var.region}\\ndatabase_id: ${var.database_id}\\ndatabase: ${var.database_name}",
+  "text": "Cloud SQL Memory utilization exceeded threshold.",
   "object": "CloudSQLMemory",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
