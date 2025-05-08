@@ -115,9 +115,9 @@ EOT
   }
 }
 
-# =============================================================
+# =========================================================
 # VM High Memory & Kubernetes Node Resource Alert Policy
-# =============================================================
+# =========================================================
 resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
   display_name = "VM High Memory Alert"
   combiner     = "OR"
@@ -226,9 +226,9 @@ EOT
   }
 }
 
-# =====================================================
+# =======================================================
 # Cloud SQL Memory Utilization Alert Policy (> 70%)
-# =====================================================
+# =======================================================
 resource "google_monitoring_alert_policy" "cloud_sql_memory_utilization" {
   display_name = "Cloud SQL Memory > 70%-orchestration"
   combiner     = "OR"
@@ -272,29 +272,13 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.\\nmetric: \${metric.type}\\nproject.id: \${resource.label.project_id}\\nregion: \${resource.label.region}\\ndatabase_id: \${resource.label.database_id}\\ndatabase: \${resource.label.database}",
+  "text": "Cloud SQL Memory utilization exceeded threshold.\\nmetric: ${google_monitoring_metric.cloud_sql_memory_utilization.name}\\nproject.id: ${var.project_id}\\nregion: ${var.region}\\ndatabase_id: ${var.database_id}\\ndatabase: ${var.database_name}",
   "object": "CloudSQLMemory",
-  "@key": "e85de96c-8c9e-49b4-a9c8-a1bac79c7435",
+  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
 }
 EOT
     mime_type = "text/markdown"
   }
-}
-
-
-
-documentation {
-  content = <<EOT
-{
-  "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.\\nmetric: ${google_monitoring_metric.cloud_sql_memory_utilization.name}\\nproject.id: ${var.project_id}\\nregion: ${var.region}\\ndatabase_id: ${var.database_id}\\ndatabase: ${var.database_name}",
-  "object": "CloudSQLMemory",
-  "@key": "e85de96c-8c9e-49b4-a9c8-a1bac79c7435",
-  "@version": "alertapi-0.1",
-  "@type": "ALERT"
-}
-EOT
-  mime_type = "text/markdown"
 }
