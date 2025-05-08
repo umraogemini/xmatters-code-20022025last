@@ -8,6 +8,7 @@ resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
     "projects/${var.project_id}/notificationChannels/11076007616266814838"
   ]
 
+  # Condition 1: VM Memory > 80%
   conditions {
     display_name = "VM Memory Utilization > 80%"
 
@@ -33,6 +34,7 @@ EOT
     }
   }
 
+  # Condition 2: VM Memory > 90%
   conditions {
     display_name = "VM Memory Utilization > 90%"
 
@@ -58,6 +60,27 @@ EOT
     }
   }
 
+  # ✅ New Condition 3: Node Memory > 50%
+  conditions {
+    display_name = "Kubernetes Node - Memory allocatable utilization exceeded 50%"
+
+    condition_threshold {
+      filter          = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/memory/allocatable_utilization\""
+      duration        = "0s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.5
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MAX"
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
   alert_strategy {
     auto_close = "86400s"
   }
@@ -66,8 +89,8 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "VM memory usage has crossed critical thresholds.",
-  "object": "VMMemory",
+  "text": "VM memory or Kubernetes node memory utilization has crossed thresholds.",
+  "object": "VMMemory | NodeMemory",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
