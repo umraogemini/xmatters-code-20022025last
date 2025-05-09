@@ -1,51 +1,48 @@
-# xmatters-code-20022025last
-xmatters-code-20022025last
+VM Alerting and Memory Utilization Monitoring – Stand-Up Summary
+The Terraform code provisions GCP monitoring infrastructure, including log-based metrics, alerting policies, and notification channels (xMatters & email). It securely fetches credentials from Secret Manager and is deployed through a Jenkins pipeline with environment-specific configurations.
 
+📌 Note: This entire monitoring setup is implemented for the Dev environment only at this stage.
 
-resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
-  display_name = "K8s Error Log Alert Policy"
-  combiner     = "OR"
+🔔 Alert Policies Implemented:
+Log-Based Metrics Alert Policy
 
-  conditions {
-    display_name = "Condition: Kubernetes Container - logging/user/k8s_error_log_metric"
+Monitors the Kube_Error_Logs custom metric from the kube-system namespace.
 
-    condition_threshold {
-      filter = <<EOT
-resource.type="k8s_container" AND
-metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
-EOT
-      comparison      = "COMPARISON_GT"
-      threshold_value = 15
-      duration        = "900s" # 15 Minutes
+Triggers alerts when error logs are detected.
 
-      aggregations {
-        alignment_period   = "900s"
-        per_series_aligner = "ALIGN_RATE"
-      }
-    }
-  }
+VM High Memory & Kubernetes Utilization Alert Policy
 
-  notification_channels = [
-    google_monitoring_notification_channel.xmatters_webhook.id,
-    google_monitoring_notification_channel.email.id
-  ]
+GCE VM memory thresholds: >80% and >90%.
 
-  documentation {
-    content = <<EOT
-{
-  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
-  "@version": "alertapi-0.1",
-  "@type": "ALERT",
-  "object": "Testobject",
-  "severity": "CRITICAL",
-  "text": "xMatters ERROR Test"
-}
-EOT
-    mime_type = "text/markdown"
-  }
+Kubernetes node thresholds:
 
-  alert_strategy {
-    auto_close = "604800s" # 7 days
-  }
-  severity = "ERROR"
-}
+Memory allocatable utilization >50%.
+
+CPU allocatable utilization >50%.
+
+Cloud SQL Memory Utilization Alert Policy
+
+Targets Cloud SQL instances in europe-west2.
+
+Alerts when memory utilization >70% (excluding SIT).
+
+Cloud SQL CPU Utilization Alert Policy
+
+Monitors CPU utilization >70% for Cloud SQL in europe-west2.
+
+SIT environment is excluded from this monitoring.
+
+⚙️ Deployment & Operations Workflow
+Terraform provisions all monitoring resources on GCP.
+
+Log-based and GCP-native metrics are continuously evaluated.
+
+Alert policies automatically trigger when metric thresholds are breached.
+
+Notifications are sent via:
+
+xMatters Webhook (with credentials from Secret Manager).
+
+Email notification channel.
+
+Deployments are automated using a Jenkins pipeline with secure and modular configuration.
