@@ -3,9 +3,9 @@ provider "google" {
   region  = var.region
 }
 
-# =======================
-# Log-Based Metric
-# =======================
+# ================================
+# Log-Based Metric Configuration
+# ================================
 resource "google_logging_metric" "log_based_metrics_dev" {
   name        = "Kube_Error_Logs"
   description = "Counts the number of error logs in kube-system namespace"
@@ -22,17 +22,17 @@ EOT
   }
 }
 
-# =======================
-# Secret Manager
-# =======================
+# ===========================
+# Secret Manager for Auth
+# ===========================
 data "google_secret_manager_secret_version" "xmatters_auth" {
   secret  = "xmatters_auth_passwd"
   project = var.project_id
 }
 
-# =======================
-# Notification Channels
-# =======================
+# ============================================
+# Notification Channels (xMatters & Email)
+# ============================================
 resource "google_monitoring_notification_channel" "xmatters_webhook" {
   display_name = "xMatters Webhook"
   type         = "webhook_basicauth"
@@ -58,9 +58,9 @@ resource "google_monitoring_notification_channel" "email" {
   }
 }
 
-# =======================
-# Kubernetes Error Alert
-# =======================
+# ========================
+# Log-Based Alert Policy
+# ========================
 resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
   display_name = "Kube_Error_Logs"
   combiner     = "OR"
@@ -68,34 +68,34 @@ resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
   project      = var.project_id
 
   notification_channels = [
-    google_monitoring_notification_channel.xmatters_webhook.name,
-    google_monitoring_notification_channel.email.name
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
-    display_name = "Kube_Error_Logs"
+    display_name = "Kube Error Logs Detected"
 
     condition_threshold {
       filter = <<EOT
 resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics_dev.name}"
 EOT
-      duration   = "0s"
+      duration   = "300s"
       comparison = "COMPARISON_GT"
 
       aggregations {
-        alignment_period     = "60s"
+        alignment_period     = "300s"
         cross_series_reducer = "REDUCE_SUM"
         per_series_aligner   = "ALIGN_DELTA"
       }
 
       trigger {
-        count = 1
+        percent = 50
       }
     }
   }
 
   alert_strategy {
-    auto_close = "604800s"
+    auto_close = "604800s" # 7 days
   }
 
   documentation {
@@ -111,36 +111,31 @@ EOT
 EOT
     mime_type = "text/markdown"
   }
-
-  user_labels = {}
 }
 
-# =======================
-# VM High Memory Alert
-# =======================
-resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
-  display_name = "VM High Memory Alert"
+# ===============================
+# VM Resource Utilization Alerts
+# ===============================
+resource "google_monitoring_alert_policy" "vm_resource_utilization_alert" {
+  display_name = "VM & Node Resource Utilization"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
     display_name = "VM Memory Utilization > 80%"
-
     condition_threshold {
       filter = <<EOT
-resource.type = "gce_instance"
-AND metric.type = "agent.googleapis.com/memory/percent_used"
-AND metric.labels.state = "used"
-AND NOT metadata.system_labels.name = monitoring.regex.full_match("nongo.*")
+resource.type = "gce_instance" AND metric.type = "agent.googleapis.com/memory/percent_used" AND metric.labels.state = "used"
 EOT
-      duration         = "300s"
-      comparison       = "COMPARISON_GT"
-      threshold_value  = 80
+      duration        = "300s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 80
 
       aggregations {
         alignment_period   = "300s"
@@ -148,7 +143,66 @@ EOT
       }
 
       trigger {
-        count = 1
+        percent = 50
+      }
+    }
+  }
+
+  conditions {
+    display_name = "VM CPU Utilization > 80%"
+    condition_threshold {
+      filter = <<EOT
+resource.type = "gce_instance" AND metric.type = "agent.googleapis.com/cpu/utilization"
+EOT
+      duration        = "300s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 80
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+
+      trigger {
+        percent = 50
+      }
+    }
+  }
+
+  conditions {
+    display_name = "K8s Node Memory > 50%"
+    condition_threshold {
+      filter = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/memory/allocatable_utilization\""
+      duration        = "300s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.5
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MAX"
+      }
+
+      trigger {
+        percent = 50
+      }
+    }
+  }
+
+  conditions {
+    display_name = "K8s Node CPU > 50%"
+    condition_threshold {
+      filter = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/cpu/allocatable_utilization\""
+      duration        = "300s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.5
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MAX"
+      }
+
+      trigger {
+        percent = 50
       }
     }
   }
@@ -161,8 +215,8 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "VM memory or Kubernetes node memory or CPU utilization has crossed thresholds.",
-  "object": "VMMemory | NodeMemory | NodeCPU",
+  "text": "VM/K8s resource utilization exceeded threshold.",
+  "object": "VM or Kubernetes Node",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -170,30 +224,29 @@ EOT
 EOT
     mime_type = "text/markdown"
   }
-
-  user_labels = {}
 }
 
-# =======================
-# Cloud SQL Memory Alert (Updated from JSON)
-# =======================
-resource "google_monitoring_alert_policy" "cloud_sql_memory_utilization" {
-  display_name = "Cloud SQL Memory 70%"
+# ===============================
+# Cloud SQL CPU & Memory Alerts
+# ===============================
+resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
+  display_name = "Cloud SQL Utilization Alert"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/14755094464550284125",
-    "projects/${var.project_id}/notificationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
-    display_name = "Cloud SQL Database - Memory utilization"
-
+    display_name = "Cloud SQL Memory > 70%"
     condition_threshold {
-      filter = "resource.type = \"cloudsql_database\" AND resource.labels.region = \"europe-west2\" AND metric.type = \"cloudsql.googleapis.com/database/memory/utilization\""
-      duration        = "0s"
+      filter = <<EOT
+resource.type = "cloudsql_database" AND resource.labels.region = "europe-west2" AND metric.type = "cloudsql.googleapis.com/database/memory/utilization"
+EOT
+      duration        = "300s"
       comparison      = "COMPARISON_GT"
       threshold_value = 70
 
@@ -203,65 +256,20 @@ resource "google_monitoring_alert_policy" "cloud_sql_memory_utilization" {
       }
 
       trigger {
-        count = 1
+        percent = 50
       }
     }
   }
 
-  alert_strategy {
-    auto_close = "604800s"
-    notification_prompts = ["OPENED"]
-  }
-
-  documentation {
-    content = <<EOT
-{
-  "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.",
-  "object": "CloudSQLMemory",
-  "instance_id": "orchestration-d9766709db",
-  "region": "${var.region}",
-  "tier": "db-custom-1-3840",
-  "availability": "Zonal",
-  "disk_type": "PD_SSD",
-  "disk_size": "65",
-  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
-  "@version": "alertapi-0.1",
-  "@type": "ALERT"
-}
-EOT
-    mime_type = "text/markdown"
-  }
-
-  user_labels = {}
-}
-
-# =======================
-# Cloud SQL CPU Alert
-# =======================
-resource "google_monitoring_alert_policy" "cloud_sql_cpu_utilization" {
-  display_name = "Cloud SQL CPU > 70% - orchestration"
-  combiner     = "OR"
-  enabled      = true
-  project      = var.project_id
-
-  notification_channels = [
-    "projects/${var.project_id}/notificationChannels/14755094464550284125",
-    "projects/${var.project_id}/notificationChannels/3455478624500074369"
-  ]
-
   conditions {
-    display_name = "Cloud SQL Database - CPU utilization 70%"
-
+    display_name = "Cloud SQL CPU > 70%"
     condition_threshold {
       filter = <<EOT
-resource.type = "cloudsql_database"
-AND resource.labels.region = "europe-west2"
-AND metric.type = "cloudsql.googleapis.com/database/cpu/utilization"
+resource.type = "cloudsql_database" AND resource.labels.region = "europe-west2" AND metric.type = "cloudsql.googleapis.com/database/cpu/utilization"
 EOT
-      duration        = "0s"
+      duration        = "300s"
       comparison      = "COMPARISON_GT"
-      threshold_value = 0.7
+      threshold_value = 70
 
       aggregations {
         alignment_period   = "300s"
@@ -269,28 +277,22 @@ EOT
       }
 
       trigger {
-        count = 1
+        percent = 50
       }
     }
   }
 
   alert_strategy {
-    auto_close = "604800s"
-    notification_prompts = ["OPENED", "CLOSED"]
+    auto_close = "86400s"
   }
 
   documentation {
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.",
-  "object": "CloudSQLMemory",
-  "instance_id": "orchestration-d9766709db",
+  "text": "Cloud SQL resource utilization exceeded threshold.",
+  "object": "CloudSQL",
   "region": "europe-west2",
-  "tier": "db-custom-1-3840",
-  "availability": "Zonal",
-  "disk_type": "PD_SSD",
-  "disk_size": "65",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -298,6 +300,4 @@ EOT
 EOT
     mime_type = "text/markdown"
   }
-
-  user_labels = {}
 }
