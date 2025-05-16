@@ -1,6 +1,7 @@
-# ========================
+# ================================
 # Provider Configuration
-# ========================
+# ================================
+
 provider "google" {
   project = var.project_id
   region  = var.region
@@ -9,6 +10,7 @@ provider "google" {
 # ================================
 # Log-Based Metric Configuration
 # ================================
+
 resource "google_logging_metric" "log_based_metrics_dev" {
   name        = "Kube_Error_Logs"
   description = "Counts the number of error logs in kube-system namespace"
@@ -25,17 +27,19 @@ EOT
   }
 }
 
-# ============================
-# Secret Manager Configuration
-# ============================
+# ===========================
+# Secret Manager for Auth
+# ===========================
+
 data "google_secret_manager_secret_version" "xmatters_auth" {
   secret  = "xmatters_auth_passwd"
   project = var.project_id
 }
 
-# ===========================================
-# Notification Channels (xMatters and Email)
-# ===========================================
+# ============================================
+# Notification Channels (xMatters & Email)
+# ============================================
+
 resource "google_monitoring_notification_channel" "xmatters_webhook" {
   display_name = "xMatters Webhook"
   type         = "webhook_basicauth"
@@ -51,6 +55,10 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
   }
 }
 
+# ================================
+# Email Notification
+# ================================
+
 resource "google_monitoring_notification_channel" "email" {
   display_name = "Email Notification For GCP TF"
   type         = "email"
@@ -61,9 +69,10 @@ resource "google_monitoring_notification_channel" "email" {
   }
 }
 
-# =============================
-# Log-Based Alert Policy
-# =============================
+# ========================
+# Alert Policy
+# ========================
+
 resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
   display_name = "Kube_Error_Logs"
   combiner     = "OR"
@@ -71,22 +80,21 @@ resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
   project      = var.project_id
 
   notification_channels = [
-    google_monitoring_notification_channel.xmatters_webhook.name,
-    google_monitoring_notification_channel.email.name
+    "project/${var.project_id}/notifiationChannels/11076007616666666"
   ]
 
   conditions {
-    display_name = "Kube_Error_Logs"
+    display_name = "Kube Error Logs Detected"
 
     condition_threshold {
       filter = <<EOT
 resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics_dev.name}"
 EOT
-      duration   = "0s"
+      duration   = "300s"
       comparison = "COMPARISON_GT"
 
       aggregations {
-        alignment_period     = "60s"
+        alignment_period     = "300s"
         cross_series_reducer = "REDUCE_SUM"
         per_series_aligner   = "ALIGN_DELTA"
       }
@@ -102,7 +110,7 @@ EOT
   }
 
   documentation {
-    content = <<EOT
+    content = <<-EOT
 {
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
@@ -118,20 +126,24 @@ EOT
   user_labels = {}
 }
 
-# =============================
-# VM High Memory Alert Policy
-# =============================
-resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
-  display_name = "VM High Memory Alert"
+# ===============================
+# VM Resource Utilization Alerts
+# ===============================
+
+resource "google_monitoring_alert_policy" "vm_resource_utilization_alert" {
+  display_name = "VM & Node Resource Utilization"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+    "project/${var.project_id}/notifiationChannels/11076007616666666"
   ]
 
-  # Condition 1
+# ===============================
+# Condation 1 VM Memory >80%
+# ===============================
+
   conditions {
     display_name = "VM Memory Utilization > 80%"
 
@@ -140,11 +152,11 @@ resource "google_monitoring_alert_policy" "vm_high_memory_alert" {
 resource.type = "gce_instance"
 AND metric.type = "agent.googleapis.com/memory/percent_used"
 AND metric.labels.state = "used"
-AND NOT metadata.system_labels.name = monitoring.regex.full_match("nongo.*")
+AND NOT metadata.system_lables.name = monitoring.regex.full_match("nongo.*")
 EOT
-      duration         = "300s"
-      comparison       = "COMPARISON_GT"
-      threshold_value  = 80
+      duration        = "300s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 80
 
       aggregations {
         alignment_period   = "300s"
@@ -152,43 +164,20 @@ EOT
       }
 
       trigger {
-        count = 1
+        percent = 50
       }
     }
   }
+  
+# ===============================
+# Condation 2 Node Memory >50%
+# ===============================
 
-  # Condition 2
-  conditions {
-    display_name = "VM Memory Utilization > 90%"
-
-    condition_threshold {
-      filter = <<EOT
-resource.type = "gce_instance"
-AND metric.type = "agent.googleapis.com/memory/percent_used"
-AND metric.labels.state = "used"
-AND NOT metadata.system_labels.name = monitoring.regex.full_match("nongo.*")
-EOT
-      duration         = "300s"
-      comparison       = "COMPARISON_GT"
-      threshold_value  = 90
-
-      aggregations {
-        alignment_period   = "300s"
-        per_series_aligner = "ALIGN_MEAN"
-      }
-
-      trigger {
-        count = 1
-      }
-    }
-  }
-
-  # Condition 3
-  conditions {
-    display_name = "Kubernetes Node - Memory allocatable utilization exceeded 50%"
+   conditions {
+    display_name = "K8s Node Memory > 50%"
 
     condition_threshold {
-      filter          = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/memory/allocatable_utilization\""
+      filter = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/memory/allocatable_utilization\""
       duration        = "0s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0.5
@@ -204,19 +193,76 @@ EOT
     }
   }
 
-  # Condition 4
+# ===============================
+# Condation 3 Node CPU >50%
+# ===============================
+
   conditions {
-    display_name = "Kubernetes Node - CPU allocatable utilization exceeded 50%"
+    display_name = "K8s Node CPU > 50%"
 
     condition_threshold {
-      filter          = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/cpu/allocatable_utilization\""
-      duration        = "0s"
+      filter = "resource.type = \"k8s_node\" AND metric.type = \"kubernetes.io/node/cpu/allocatable_utilization\""
+      duration        = "300s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0.5
 
       aggregations {
         alignment_period   = "300s"
         per_series_aligner = "ALIGN_MAX"
+      }
+
+      trigger {
+        percent = 50
+      }
+    }
+  }
+  alert_strategy {
+    auto_close = "86400s"
+  }
+
+  documentation {
+    content = <<EOT
+{
+  "severity": "WARNING",
+  "text": "VM/K8s resource utilization exceeded threshold.",
+  "project_id": "${var.projecct_id}",
+  "object": "VM or Kubernetes Node",
+  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+EOT
+    mime_type = "text/markdown"
+  }
+}
+
+# ===============================
+# Cloud SQL CPU & Memory Alerts
+# ===============================
+
+resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
+  display_name = "Cloud SQL Utilization Alert"
+  combiner     = "OR"
+  enabled      = true
+  project      = var.project_id
+
+  notification_channels = [
+    "project/${var.project_id}/notifiationChannels/11076007616666666"
+    "project/${var.project_id}/notifiationChannels/23569458521663889"
+  ]
+
+  conditions {
+    display_name = "Cloud SQL Memory > 70%"
+
+    condition_threshold {
+      filter = resource.type =\"gce_instance\" AND metric.type = \"agent.googleapis.com/cpu/utilization\""
+      duration        = "0s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 60
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_MEAN"
       }
 
       trigger {
@@ -233,8 +279,10 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "VM memory or Kubernetes node memory or CPU utilization has crossed thresholds.",
-  "object": "VMMemory | NodeMemory | NodeCPU",
+  "text": "VM High CPU Utilization Alert",
+  "project_id": "${var.projecct_id}",
+  "object": "AM CPU Utilization",
+  "region": "europe-west2",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -246,29 +294,27 @@ EOT
   user_labels = {}
 }
 
-# =========================================================
-# Cloud SQL Memory Utilization Alert Policy (> 70%)
-# =========================================================
-resource "google_monitoring_alert_policy" "cloud_sql_memory_utilization" {
-  display_name = "Cloud SQL Memory > 70%-orchestration"
+
+# ===============================
+# Cloud SQL Memory Utilization
+# ===============================
+
+resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
+  display_name = "Cloud SQL Utilization Alert"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+    "project/${var.project_id}/notifiationChannels/11076007616666666"
+    "project/${var.project_id}/notifiationChannels/23569458521663889"
   ]
 
   conditions {
-    display_name = "Cloud SQL Database - Memory utilization exceeded 70%"
+    display_name = "Cloud SQL CPU > 70%"
 
     condition_threshold {
-      filter = <<EOT
-resource.type = "cloudsql_database"
-AND (resource.labels.database_id = monitoring.regex.full_match(".*ecosystem-orchestration.*")
-AND resource.labels.database_id != monitoring.regex.full_match(".*ecosystem-orchestration-sit.*"))
-AND metric.type = "cloudsql.googleapis.com/database/memory/utilization"
-EOT
+      filter = resource.type = \"cloudsql_database\" AND resource.labels.region = \"europe-west2\" AND metric.type = \"cloudsql.googleapis.com/database/memory/utilization\""
       duration        = "0s"
       comparison      = "COMPARISON_GT"
       threshold_value = 70
@@ -293,7 +339,10 @@ EOT
 {
   "severity": "WARNING",
   "text": "Cloud SQL Memory utilization exceeded threshold.",
-  "object": "CloudSQLMemory",
+  "project_id": "${var.projecct_id}",
+  "object": "CloudSQL",
+  "instance_id": "oregaigijh=jfbdksb",
+  "region": "${var.region}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -301,34 +350,39 @@ EOT
 EOT
     mime_type = "text/markdown"
   }
+
+user_labels ={}
+
 }
 
-# ========================================================
-# Cloud SQL CPU Utilization Alert Policy (> 70%)
-# ========================================================
-resource "google_monitoring_alert_policy" "cloud_sql_cpu_utilization" {
-  display_name = "Cloud SQL CPU > 70% - orchestration"
+
+# ===============================
+# Cloud SQL CPU Utilization
+# ===============================
+
+resource "google_monitoring_alert_policy" "cloudsql_cpu_utilization" {
+  display_name = "Cloud SQL CPU"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+    "project/${var.project_id}/notifiationChannels/11076007616666666"
+    "project/${var.project_id}/notifiationChannels/23569458521663889"
   ]
 
   conditions {
-    display_name = "Cloud SQL Database - CPU utilization exceeded 70%"
+    display_name = "Cloud SQL CPU > 70%"
 
     condition_threshold {
-      filter = <<EOT
-resource.type = "cloudsql_database"
-AND (resource.labels.database_id = monitoring.regex.full_match(".*ecosystem-orchestration.*")
-AND resource.labels.database_id != monitoring.regex.full_match(".*ecosystem-orchestration-sit.*"))
-AND metric.type = "cloudsql.googleapis.com/database/cpu/utilization"
+      filter = <EOT
+resource.type = "cloudsql_database" 
+AND resource.labels.region = "europe-west2" 
+AND metric.type = "cloudsql.googleapis.com/database/memory/utilization"
 EOT
       duration        = "0s"
       comparison      = "COMPARISON_GT"
-      threshold_value = 0.7
+      threshold_value = 70
 
       aggregations {
         alignment_period   = "300s"
@@ -346,11 +400,14 @@ EOT
   }
 
   documentation {
-    content = <<EOT
+    content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Database - CPU utilization exceeded 70%\nmetric: cloudsql.googleapis.com/database/cpu/utilization\nproject_id: ${var.project_id}\nregion: ${var.region}\ndatabase_id: <database_id>\ndatabase: <database_name>",
-  "object": "CloudSQLCPU",
+  "text": "Cloud SQL Memory utilization exceeded threshold.",
+  "project_id": "${var.projecct_id}",
+  "object": "CloudSQL",
+  "instance_id": "oregaigijh=jfbdksb",
+  "region": "${var.region}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -358,4 +415,7 @@ EOT
 EOT
     mime_type = "text/markdown"
   }
+
+user_labels ={}
+
 }
