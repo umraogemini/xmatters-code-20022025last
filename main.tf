@@ -430,7 +430,29 @@ user_labels ={}
 }
 
 # ===============================
-# Flink Alert Policy
+# Log-Based Metric: Flink Logs
+# ===============================
+
+resource "google_logging_metric" "flink_log_alert_metric" {
+  name        = "Flink_Log_Errors"
+  description = "Tracks Flink job error logs"
+  project     = var.project_id
+
+  filter = <<EOT
+resource.type="k8s_container"
+AND severity="ERROR"
+AND logName:"flink"
+EOT
+
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "INT64"
+    unit        = "1"
+  }
+}
+
+# ===============================
+# Alert Policy: Flink Log Errors
 # ===============================
 
 resource "google_monitoring_alert_policy" "flink_log_alert_policy" {
@@ -483,4 +505,92 @@ EOT
   }
 
   user_labels = {}
+}
+
+# ===============================
+# XDS Alert Policy
+# ===============================
+
+resource "google_logging_metric" "xds_error_logs_alerts" {
+  name        = "XDS_Error_Logs_Alerts"
+  description = "Tracks XDS-related errors and warnings"
+  project     = var.project_id
+
+  filter = <<EOT
+resource.type="k8s_container" 
+AND severity=("ERROR" OR "INFO") 
+AND (  
+  textPayload:"RD10001" OR
+  textPayload:"RD10014" OR
+  textPayload:"RD10015" OR
+  textPayload:"RD10016" OR
+  textPayload:"RD10024" OR
+  textPayload:"RD10034" OR
+  textPayload:"RD10035" OR
+  textPayload:"RD10044" OR
+  textPayload:"RD10094" OR
+  textPayload:"RD10099"
+)
+EOT
+
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "INT64"
+    unit        = "1"
+  }
+}
+
+# ================================
+# Alert Policy: XDS Error Logs
+# ================================
+
+resource "google_monitoring_alert_policy" "xds_error_logs_alerts" {
+  display_name = "XDS Error Logs Alerts"
+  combiner     = "OR"
+  enabled      = true
+  project      = var.project_id
+
+  notification_channels = [
+    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+  ]
+
+  conditions {
+    display_name = "XDS Error Logs Detected"
+
+    condition_threshold {
+      filter = <<EOT
+resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.xds_error_logs_alerts.name}"
+EOT
+      duration   = "0s"
+      comparison = "COMPARISON_GT"
+
+      aggregations {
+        alignment_period     = "60s"
+        cross_series_reducer = "REDUCE_SUM"
+        per_series_aligner   = "ALIGN_DELTA"
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  alert_strategy {
+    auto_close = "604800s"  # 7 days
+  }
+
+  documentation {
+    content = <<EOT
+{
+  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT",
+  "object": "XDS Error Event",
+  "severity": "CRITICAL",
+  "text": "${var.project_id} xMatters XDS ERROR Alert"
+}
+EOT
+    mime_type = "text/markdown"
+  }
 }
