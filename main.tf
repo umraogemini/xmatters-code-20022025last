@@ -117,7 +117,7 @@ EOT
   "@type": "ALERT",
   "object": "Testobject",
   "severity": "CRITICAL",
-  "text": "xMatters ERROR Test"
+  "text": "${var.projecct_id} xMatters ERROR Test"
 }
 EOT
     mime_type = "text/markdown"
@@ -212,7 +212,7 @@ EOT
       }
 
       trigger {
-        percent = 50
+        count = 1
       }
     }
   }
@@ -222,9 +222,11 @@ EOT
 
   documentation {
     content = <<EOT
+
+
 {
   "severity": "WARNING",
-  "text": "VM/K8s resource utilization exceeded threshold.",
+  "text": "${var.projecct_id} VM/K8s resource utilization exceeded threshold.",
   "project_id": "${var.projecct_id}",
   "object": "VM or Kubernetes Node",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
@@ -279,7 +281,7 @@ resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "VM High CPU Utilization Alert",
+  "text": "${var.projecct_id} VM High CPU Utilization Alert",
   "project_id": "${var.projecct_id}",
   "object": "AM CPU Utilization",
   "region": "europe-west2",
@@ -334,15 +336,20 @@ resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
     auto_close = "86400s"
   }
 
+  
   documentation {
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.",
+  "text": "${var.projecct_id} Cloud SQL Memory utilization exceeded threshold.",
   "project_id": "${var.projecct_id}",
   "object": "CloudSQL",
   "instance_id": "oregaigijh=jfbdksb",
   "region": "${var.region}",
+  "tier": "db-custom-1-3840",
+  "availability": "Zonal",
+  "disk_type": "PS_SSD",
+  "disk_size": "65",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -352,9 +359,7 @@ EOT
   }
 
 user_labels ={}
-
 }
-
 
 # ===============================
 # Cloud SQL CPU Utilization
@@ -397,17 +402,22 @@ EOT
 
   alert_strategy {
     auto_close = "86400s"
+    
   }
 
   documentation {
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "Cloud SQL Memory utilization exceeded threshold.",
+  "text": "${var.projecct_id} Cloud SQL Memory utilization exceeded threshold.",
   "project_id": "${var.projecct_id}",
   "object": "CloudSQL",
   "instance_id": "oregaigijh=jfbdksb",
   "region": "${var.region}",
+  "tier": "db-custom-1-3840",
+  "availability": "Zonal",
+  "disk_type": "PS_SSD",
+  "disk_size": "65",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -417,5 +427,4 @@ EOT
   }
 
 user_labels ={}
-
 }
