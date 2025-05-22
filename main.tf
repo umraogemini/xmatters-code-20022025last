@@ -80,7 +80,8 @@ resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/11076007616666666"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
   conditions {
@@ -137,7 +138,8 @@ resource "google_monitoring_alert_policy" "vm_resource_utilization_alert" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/11076007616666666"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
 # ===============================
@@ -164,7 +166,7 @@ EOT
       }
 
       trigger {
-        percent = 50
+        count = 1
       }
     }
   }
@@ -239,28 +241,31 @@ EOT
 }
 
 # ===============================
-# Cloud SQL CPU & Memory Alerts
+# VM High CPU Utilization Alerts
 # ===============================
 
-resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
-  display_name = "Cloud SQL Utilization Alert"
+resource "google_monitoring_alert_policy" "vm_high_cpu_utilization" {
+  display_name = "VM High CPU Utilization Alert"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/11076007616666666"
-    "project/${var.project_id}/notifiationChannels/23569458521663889"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
   conditions {
-    display_name = "Cloud SQL Memory > 70%"
+    display_name = "VM CPU Utilization > 80%"
 
     condition_threshold {
-      filter = resource.type =\"gce_instance\" AND metric.type = \"agent.googleapis.com/cpu/utilization\""
-      duration        = "0s"
+      filter = <<EOT
+resource.type ="gce_instance" 
+AND metric.type ="agent.googleapis.com/cpu/utilization"
+EOT
+      duration        = "300s"
       comparison      = "COMPARISON_GT"
-      threshold_value = 60
+      threshold_value = 80
 
       aggregations {
         alignment_period   = "300s"
@@ -274,7 +279,8 @@ resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
   }
 
   alert_strategy {
-    auto_close = "86400s"
+    auto_close = "604800s"
+
   }
 
   documentation {
@@ -283,8 +289,7 @@ resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
   "severity": "WARNING",
   "text": "${var.projecct_id} VM High CPU Utilization Alert",
   "project_id": "${var.projecct_id}",
-  "object": "AM CPU Utilization",
-  "region": "europe-west2",
+  "object": "VM CPU Utilization",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -298,25 +303,25 @@ EOT
 
 
 # ===============================
-# Cloud SQL Memory Utilization
+# Cloud SQL Memory Utlization Alerts
 # ===============================
 
-resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
-  display_name = "Cloud SQL Utilization Alert"
+resource "google_monitoring_alert_policy" "cloud_sql_utilization" {
+  display_name = "Cloud SQL Memory Utilization"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/11076007616666666"
-    "project/${var.project_id}/notifiationChannels/23569458521663889"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
   conditions {
-    display_name = "Cloud SQL CPU > 70%"
+    display_name = "Cloud SQL Database - Memory utilization"
 
     condition_threshold {
-      filter = resource.type = \"cloudsql_database\" AND resource.labels.region = \"europe-west2\" AND metric.type = \"cloudsql.googleapis.com/database/memory/utilization\""
+      filter = resource.type =\"cloudsql_database\" AND resource.labels.region = \"europe-west2\" AND metric.type = \"cloudsql.googleapis.com/database/memory/utilization\""
       duration        = "0s"
       comparison      = "COMPARISON_GT"
       threshold_value = 70
@@ -333,12 +338,12 @@ resource "google_monitoring_alert_policy" "cloudsql_utilization_alert" {
   }
 
   alert_strategy {
-    auto_close = "86400s"
+    auto_close = "604800s"
+
   }
 
-  
   documentation {
-    content = <<EOT
+    content = <<-EOT
 {
   "severity": "WARNING",
   "text": "${var.projecct_id} Cloud SQL Memory utilization exceeded threshold.",
@@ -358,32 +363,32 @@ EOT
     mime_type = "text/markdown"
   }
 
-user_labels ={}
+  user_labels = {}
 }
 
 # ===============================
-# Cloud SQL CPU Utilization
+# Cloud SQL CPU Utilization Alert Policy 
 # ===============================
 
-resource "google_monitoring_alert_policy" "cloudsql_cpu_utilization" {
-  display_name = "Cloud SQL CPU"
+resource "google_monitoring_alert_policy" "cloud_sql_cpu_utilization" {
+  display_name = "Cloud SQL CPU Utilization"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/11076007616666666"
-    "project/${var.project_id}/notifiationChannels/23569458521663889"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
   conditions {
-    display_name = "Cloud SQL CPU > 70%"
+    display_name = "Cloud SQL Database -CPU utilization 80%"
 
     condition_threshold {
       filter = <EOT
 resource.type = "cloudsql_database" 
 AND resource.labels.region = "europe-west2" 
-AND metric.type = "cloudsql.googleapis.com/database/memory/utilization"
+AND metric.type = "cloudsql.googleapis.com/database/cpu/utilization"
 EOT
       duration        = "0s"
       comparison      = "COMPARISON_GT"
@@ -462,7 +467,8 @@ resource "google_monitoring_alert_policy" "flink_log_alert_policy" {
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
   conditions {
@@ -507,6 +513,7 @@ EOT
   user_labels = {}
 }
 
+
 # ===============================
 # XDS Alert Policy
 # ===============================
@@ -534,7 +541,7 @@ AND (
 EOT
 
   metric_descriptor {
-    metric_kind = "DELTA"
+    metric_kind = "CUMULATIVE"
     value_type  = "INT64"
     unit        = "1"
   }
@@ -551,7 +558,8 @@ resource "google_monitoring_alert_policy" "xds_error_logs_alerts" {
   project      = var.project_id
 
   notification_channels = [
-    "projects/${var.project_id}/notificationChannels/11076007616266814838"
+    "project/${var.project_id}/notifiationChannels/14755094464550284125",
+    "project/${var.project_id}/notifiationChannels/3455478624500074369"
   ]
 
   conditions {
