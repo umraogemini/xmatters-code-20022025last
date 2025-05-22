@@ -112,13 +112,17 @@ EOT
 
   documentation {
     content = <<-EOT
+
 {
+  "severity": "WARNING",
+  "text": "${var.project_id} VM/K8s resource utilization exceeded threshold.",
+  "project_id": "${var.project_id}",
+  "object": "VM or Kubernetes Node",
+  "vm_name": "${resource.label.instance_id}",
+  "zone": "${resource.label.zone}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
-  "@type": "ALERT",
-  "object": "Testobject",
-  "severity": "CRITICAL",
-  "text": "${var.projecct_id} xMatters ERROR Test"
+  "@type": "Kube_Error_Logs Alert"
 }
 EOT
     mime_type = "text/markdown"
@@ -225,12 +229,13 @@ EOT
   documentation {
     content = <<EOT
 
-
 {
   "severity": "WARNING",
-  "text": "${var.projecct_id} VM/K8s resource utilization exceeded threshold.",
-  "project_id": "${var.projecct_id}",
-  "object": "VM or Kubernetes Node",
+  "text": "${var.project_id} VM/K8s resource utilization exceeded threshold.",
+  "project_id": "${var.project_id}",
+  "object": "VM CPU | Node Memory | Node CPU Utilization",
+  "vm_name": "${resource.label.instance_id}",
+  "zone": "${resource.label.zone}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -287,9 +292,11 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "${var.projecct_id} VM High CPU Utilization Alert",
-  "project_id": "${var.projecct_id}",
+  "text": "${var.project_id} VM High CPU Utilization Alert",
+  "project_id": "${var.project_id}",
   "object": "VM CPU Utilization",
+  "instance_id": "${resource.label.instance_id}",
+  "zone": "${resource.label.zone}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -346,15 +353,15 @@ resource "google_monitoring_alert_policy" "cloud_sql_utilization" {
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "${var.projecct_id} Cloud SQL Memory utilization exceeded threshold.",
-  "project_id": "${var.projecct_id}",
-  "object": "CloudSQL",
-  "instance_id": "oregaigijh=jfbdksb",
-  "region": "${var.region}",
-  "tier": "db-custom-1-3840",
+  "text": "${var.project_id} Cloud SQL Memory utilization Alert",
+  "project_id": "${var.project_id}",
+  "object": "CloudSQLMemory",
+  "instance_id": "${resource.label.database_id}",
+  "region": "${resource.label.region}",
   "availability": "Zonal",
-  "disk_type": "PS_SSD",
-  "disk_size": "65",
+  "tier": "${resource.label.tier}",
+  "disk_type": "${resource.label.disk_type}",
+  "disk_size": "${resource.label.disk_size}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -414,15 +421,15 @@ EOT
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "${var.projecct_id} Cloud SQL Memory utilization exceeded threshold.",
-  "project_id": "${var.projecct_id}",
+  "text": "${var.project_id} Cloud SQL CPU Utilization Alert",
+  "project_id": "${var.project_id}",
   "object": "CloudSQL",
-  "instance_id": "oregaigijh=jfbdksb",
-  "region": "${var.region}",
-  "tier": "db-custom-1-3840",
+  "instance_id": "${resource.label.database_id}",
+  "region": "${resource.label.region}",
   "availability": "Zonal",
-  "disk_type": "PS_SSD",
-  "disk_size": "65",
+  "tier": "${resource.label.tier}",
+  "disk_type": "${resource.label.disk_type}",
+  "disk_size": "${resource.label.disk_size}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -503,7 +510,12 @@ EOT
     content = <<EOT
 {
   "severity": "CRITICAL",
-  "text": "Flink job has failed in project ${var.project_id}. Check logs for details.",
+  "text": "Flink job has failed in project ${var.project_id}.",
+  "project_id": "${var.project_id}",
+  "job": "Flink Job",
+  "pod_name": "${resource.label.pod_name}",
+  "namespace": "${resource.label.namespace_name}",
+  "container_name": "${resource.label.container_name}",
   "@type": "ALERT"
 }
 EOT
@@ -596,6 +608,9 @@ EOT
   "@type": "ALERT",
   "object": "XDS Error Event",
   "severity": "CRITICAL",
+  "project_id": "${var.project_id}",
+  "pod_name": "${resource.label.pod_name}",
+  "container_name": "${resource.label.container_name}",
   "text": "${var.project_id} xMatters XDS ERROR Alert"
 }
 EOT
