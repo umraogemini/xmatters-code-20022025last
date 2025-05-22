@@ -115,7 +115,7 @@ EOT
 
 {
   "severity": "WARNING",
-  "text": "${var.project_id} VM/K8s resource utilization exceeded threshold.",
+  "text": "${var.project_id} VM High Memory Utilization Alert on instance ${resource.labels.instance_id} (${metadata.system_labels.name})"
   "project_id": "${var.project_id}",
   "object": "VM or Kubernetes Node",
   "vm_name": "${resource.label.instance_id}",
@@ -231,7 +231,7 @@ EOT
 
 {
   "severity": "WARNING",
-  "text": "${var.project_id} VM/K8s resource utilization exceeded threshold.",
+  "text": "${var.project_id} VM High Memory Utilization Alert on instance ${resource.labels.instance_id} (${metadata.system_labels.name})"
   "project_id": "${var.project_id}",
   "object": "VM CPU | Node Memory | Node CPU Utilization",
   "vm_name": "${resource.label.instance_id}",
@@ -292,7 +292,7 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "${var.project_id} VM High CPU Utilization Alert",
+  "text": "${var.project_id} VM High CPU Utilization Alert on instance ${resource.labels.instance_id} (${metadata.system_labels.name})"
   "project_id": "${var.project_id}",
   "object": "VM CPU Utilization",
   "instance_id": "${resource.label.instance_id}",
@@ -353,7 +353,7 @@ resource "google_monitoring_alert_policy" "cloud_sql_utilization" {
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "${var.project_id} Cloud SQL Memory utilization Alert",
+  "text": "${var.project_id} Cloud SQL memory utilization threshold exceeded on instance ${resource.labels.database_id}"
   "project_id": "${var.project_id}",
   "object": "CloudSQLMemory",
   "instance_id": "${resource.label.database_id}",
@@ -421,7 +421,7 @@ EOT
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "${var.project_id} Cloud SQL CPU Utilization Alert",
+  "text": "${var.project_id} Cloud SQL CPU utilization threshold exceeded on instance ${resource.labels.database_id}"
   "project_id": "${var.project_id}",
   "object": "CloudSQL",
   "instance_id": "${resource.label.database_id}",
@@ -510,7 +510,7 @@ EOT
     content = <<EOT
 {
   "severity": "CRITICAL",
-  "text": "Flink job has failed in project ${var.project_id}.",
+  "text": "${var.project_id} Flink job alert - Pod: ${resource.labels.pod_name}, Container: ${resource.labels.container_name}"
   "project_id": "${var.project_id}",
   "job": "Flink Job",
   "pod_name": "${resource.label.pod_name}",
@@ -611,7 +611,7 @@ EOT
   "project_id": "${var.project_id}",
   "pod_name": "${resource.label.pod_name}",
   "container_name": "${resource.label.container_name}",
-  "text": "${var.project_id} xMatters XDS ERROR Alert"
+  "text": "${var.project_id} xMatters XDS ERROR Alert - Pod: ${resource.labels.pod_name}, Container: ${resource.labels.container_name}"
 }
 EOT
     mime_type = "text/markdown"
