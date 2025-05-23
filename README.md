@@ -1,3 +1,5 @@
+\`\`\`json
+
 VM Alerting and Memory Utilization Monitoring – Stand-Up Summary
 The Terraform code provisions GCP monitoring infrastructure, including log-based metrics, alerting policies, and notification channels (xMatters & email). It securely fetches credentials from Secret Manager and is deployed through a Jenkins pipeline with environment-specific configurations.
 
