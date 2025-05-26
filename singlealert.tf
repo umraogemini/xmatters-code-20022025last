@@ -1,4 +1,3 @@
-
 # ================================
 # Provider Configuration
 # ================================
@@ -28,14 +27,18 @@ EOT
   }
 }
 
-# ===========================
+# ================================
 # Secret Manager for Auth
-# ===========================
+# ================================
+
+data "google_secret_manager_secret_version" "xmatters_auth_username" {
+  secret  = "xMatters_Auth_Username"
+  project = var.project_id
+}
 
 data "google_secret_manager_secret_version" "xmatters_auth_password" {
   secret  = "xMatters_Auth_Passwd"
   project = var.project_id
-  is_secret_data_base64 = false
 }
 
 # ============================================
@@ -49,12 +52,14 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
 
   labels = {
     url      = var.xmatters_webhook_url
+    username = data.google_secret_manager_secret_version.xmatters_auth_username.secret_data
   }
 
   sensitive_labels {
     password = data.google_secret_manager_secret_version.xmatters_auth_password.secret_data
   }
 }
+
 resource "google_monitoring_notification_channel" "email" {
   display_name = "Email Notification Testing one"
   type         = "email"
@@ -69,7 +74,7 @@ resource "google_monitoring_notification_channel" "email" {
 # VM High CPU Utilization Alerts
 # ===============================
 
-resource "google_monitoring_alert_policy" "vm_high_cpu_utilization_alert" { # Renamed for clarity
+resource "google_monitoring_alert_policy" "vm_high_cpu_utilization_alert" {
   display_name = "VM High CPU Testing one"
   combiner     = "OR"
   enabled      = true
@@ -81,12 +86,12 @@ resource "google_monitoring_alert_policy" "vm_high_cpu_utilization_alert" { # Re
   ]
 
   conditions {
-    display_name = "VM CPU Utilization Testing one> 80%"
+    display_name = "VM CPU Utilization Testing one > 80%"
 
     condition_threshold {
       filter = <<EOT
-resource.type ="gce_instance"
-AND metric.type ="agent.googleapis.com/cpu/utilization"
+resource.type = "gce_instance"
+AND metric.type = "agent.googleapis.com/cpu/utilization"
 EOT
       duration        = "300s"
       comparison      = "COMPARISON_GT"
@@ -105,7 +110,6 @@ EOT
 
   alert_strategy {
     auto_close = "604800s"
-
   }
 
   documentation {
