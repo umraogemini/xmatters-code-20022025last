@@ -1,3 +1,4 @@
+
 # ================================
 # Provider Configuration
 # ================================
@@ -31,8 +32,8 @@ EOT
 # Secret Manager for Auth
 # ===========================
 
-data "google_secret_manager_secret_version" "xmatters_auth" {
-  secret  = "xmatters_auth_passwd"
+data "google_secret_manager_secret_version" "xmatters_auth_password" {
+  secret  = "xMatters_Auth_Passwd"
   project = var.project_id
   is_secret_data_base64 = false
 }
@@ -48,11 +49,10 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
 
   labels = {
     url      = var.xmatters_webhook_url
-    username = "BC000010001"
   }
 
   sensitive_labels {
-    password = data.google_secret_manager_secret_version.xmatters_auth.secret_data
+    password = data.google_secret_manager_secret_version.xmatters_auth_password.secret_data
   }
 }
 resource "google_monitoring_notification_channel" "email" {
