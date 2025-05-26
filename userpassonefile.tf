@@ -46,8 +46,7 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
   project      = var.project_id
 
   labels = {
-    url      = var.xmatters_webhook_url
-    username = "BC000010001"  # Optionally, also from Secret Manager
+    url = var.xmatters_webhook_url
   }
 
   sensitive_labels {
@@ -124,4 +123,3 @@ EOT
 
   user_labels = {}
 }
-
