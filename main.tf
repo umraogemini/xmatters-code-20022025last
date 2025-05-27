@@ -31,8 +31,13 @@ EOT
 # Secret Manager for Auth
 # ===========================
 
-data "google_secret_manager_secret_version" "xmatters_auth" {
-  secret  = "xmatters_auth_passwd"
+data "google_secret_manager_secret_version" "xmatters_auth_username" {
+  secret  = "xMatters_Auth_User"
+  project = var.project_id
+}
+
+data "google_secret_manager_secret_version" "xmatters_auth_password" {
+  secret  = "xMatters_Auth_Passwd"
   project = var.project_id
 }
 
@@ -47,17 +52,13 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
 
   labels = {
     url      = var.xmatters_webhook_url
-    username = "BC000010001"
+    username = data.google_secret_manager_secret_version.xmatters_auth_username.secret_data
   }
 
   sensitive_labels {
-    password = data.google_secret_manager_secret_version.xmatters_auth.secret_data
+    password = data.google_secret_manager_secret_version.xmatters_auth_password.secret_data
   }
 }
-
-# ================================
-# Email Notification
-# ================================
 
 resource "google_monitoring_notification_channel" "email" {
   display_name = "Email Notification For GCP TF"
@@ -73,15 +74,15 @@ resource "google_monitoring_notification_channel" "email" {
 # Alert Policy
 # ========================
 
-resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
+resource "google_monitoring_alert_policy" "Log_Based_Metrics_DEV" {
   display_name = "Kube_Error_Logs"
   combiner     = "OR"
   enabled      = true
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
@@ -89,13 +90,13 @@ resource "google_monitoring_alert_policy" "log_based_metrics_dev" {
 
     condition_threshold {
       filter = <<EOT
-resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics_dev.name}"
+resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.Log_Based_Metrics_DEV.name}"
 EOT
-      duration   = "300s"
+      duration   = "900s"
       comparison = "COMPARISON_GT"
 
       aggregations {
-        alignment_period     = "300s"
+        alignment_period     = "900s"
         cross_series_reducer = "REDUCE_SUM"
         per_series_aligner   = "ALIGN_DELTA"
       }
@@ -115,11 +116,8 @@ EOT
 
 {
   "severity": "WARNING",
-  "text": "${var.project_id} VM High Memory Utilization Alert on instance ${resource.labels.instance_id} (${metadata.system_labels.name})"
-  "project_id": "${var.project_id}",
+  "text": "${var.project_id} VM High Memory Utilization Alert on instance"
   "object": "VM or Kubernetes Node",
-  "vm_name": "${resource.label.instance_id}",
-  "zone": "${resource.label.zone}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "Kube_Error_Logs Alert"
@@ -142,8 +140,8 @@ resource "google_monitoring_alert_policy" "vm_resource_utilization_alert" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
 # ===============================
@@ -160,12 +158,12 @@ AND metric.type = "agent.googleapis.com/memory/percent_used"
 AND metric.labels.state = "used"
 AND NOT metadata.system_lables.name = monitoring.regex.full_match("nongo.*")
 EOT
-      duration        = "300s"
+      duration        = "900s"
       comparison      = "COMPARISON_GT"
       threshold_value = 80
 
       aggregations {
-        alignment_period   = "300s"
+        alignment_period   = "900s"
         per_series_aligner = "ALIGN_MEAN"
       }
 
@@ -231,11 +229,8 @@ EOT
 
 {
   "severity": "WARNING",
-  "text": "${var.project_id} VM High Memory Utilization Alert on instance ${resource.labels.instance_id} (${metadata.system_labels.name})"
-  "project_id": "${var.project_id}",
+  "text": "${var.project_id} VM High Memory Utilization Alert on instance"
   "object": "VM CPU | Node Memory | Node CPU Utilization",
-  "vm_name": "${resource.label.instance_id}",
-  "zone": "${resource.label.zone}",
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -256,8 +251,8 @@ resource "google_monitoring_alert_policy" "vm_high_cpu_utilization" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
@@ -268,12 +263,12 @@ resource "google_monitoring_alert_policy" "vm_high_cpu_utilization" {
 resource.type ="gce_instance" 
 AND metric.type ="agent.googleapis.com/cpu/utilization"
 EOT
-      duration        = "300s"
+      duration        = "900s"
       comparison      = "COMPARISON_GT"
       threshold_value = 80
 
       aggregations {
-        alignment_period   = "300s"
+        alignment_period   = "900s"
         per_series_aligner = "ALIGN_MEAN"
       }
 
@@ -292,11 +287,7 @@ EOT
     content = <<EOT
 {
   "severity": "WARNING",
-  "text": "${var.project_id} VM High CPU Utilization Alert on instance ${resource.labels.instance_id} (${metadata.system_labels.name})"
-  "project_id": "${var.project_id}",
-  "object": "VM CPU Utilization",
-  "instance_id": "${resource.label.instance_id}",
-  "zone": "${resource.label.zone}",
+  "text": "${var.project_id} VM High CPU Utilization Alert on instance"
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -320,8 +311,8 @@ resource "google_monitoring_alert_policy" "cloud_sql_utilization" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
@@ -329,12 +320,12 @@ resource "google_monitoring_alert_policy" "cloud_sql_utilization" {
 
     condition_threshold {
       filter = resource.type =\"cloudsql_database\" AND resource.labels.region = \"europe-west2\" AND metric.type = \"cloudsql.googleapis.com/database/memory/utilization\""
-      duration        = "0s"
+      duration        = "900s"
       comparison      = "COMPARISON_GT"
       threshold_value = 70
 
       aggregations {
-        alignment_period   = "300s"
+        alignment_period   = "900s"
         per_series_aligner = "ALIGN_MEAN"
       }
 
@@ -353,15 +344,7 @@ resource "google_monitoring_alert_policy" "cloud_sql_utilization" {
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "${var.project_id} Cloud SQL memory utilization threshold exceeded on instance ${resource.labels.database_id}"
-  "project_id": "${var.project_id}",
-  "object": "CloudSQLMemory",
-  "instance_id": "${resource.label.database_id}",
-  "region": "${resource.label.region}",
-  "availability": "Zonal",
-  "tier": "${resource.label.tier}",
-  "disk_type": "${resource.label.disk_type}",
-  "disk_size": "${resource.label.disk_size}",
+  "text": "${var.project_id} Cloud SQL memory utilization threshold exceeded on instance"
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -384,8 +367,8 @@ resource "google_monitoring_alert_policy" "cloud_sql_cpu_utilization" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
@@ -397,12 +380,12 @@ resource.type = "cloudsql_database"
 AND resource.labels.region = "europe-west2" 
 AND metric.type = "cloudsql.googleapis.com/database/cpu/utilization"
 EOT
-      duration        = "0s"
+      duration        = "900s"
       comparison      = "COMPARISON_GT"
       threshold_value = 70
 
       aggregations {
-        alignment_period   = "300s"
+        alignment_period   = "900s"
         per_series_aligner = "ALIGN_MEAN"
       }
 
@@ -421,15 +404,7 @@ EOT
     content = <<-EOT
 {
   "severity": "WARNING",
-  "text": "${var.project_id} Cloud SQL CPU utilization threshold exceeded on instance ${resource.labels.database_id}"
-  "project_id": "${var.project_id}",
-  "object": "CloudSQL",
-  "instance_id": "${resource.label.database_id}",
-  "region": "${resource.label.region}",
-  "availability": "Zonal",
-  "tier": "${resource.label.tier}",
-  "disk_type": "${resource.label.disk_type}",
-  "disk_size": "${resource.label.disk_size}",
+  "text": "${var.project_id} Cloud SQL CPU utilization threshold exceeded on instance"
   "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
   "@version": "alertapi-0.1",
   "@type": "ALERT"
@@ -474,8 +449,8 @@ resource "google_monitoring_alert_policy" "flink_log_alert_policy" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
@@ -510,12 +485,7 @@ EOT
     content = <<EOT
 {
   "severity": "CRITICAL",
-  "text": "${var.project_id} Flink job alert - Pod: ${resource.labels.pod_name}, Container: ${resource.labels.container_name}"
-  "project_id": "${var.project_id}",
-  "job": "Flink Job",
-  "pod_name": "${resource.label.pod_name}",
-  "namespace": "${resource.label.namespace_name}",
-  "container_name": "${resource.label.container_name}",
+  "text": "${var.project_id} Flink job alert"
   "@type": "ALERT"
 }
 EOT
@@ -570,8 +540,8 @@ resource "google_monitoring_alert_policy" "xds_error_logs_alerts" {
   project      = var.project_id
 
   notification_channels = [
-    "project/${var.project_id}/notifiationChannels/14755094464550284125",
-    "project/${var.project_id}/notifiationChannels/3455478624500074369"
+    google_monitoring_notification_channel.xmatters_webhook.id,
+    google_monitoring_notification_channel.email.id
   ]
 
   conditions {
@@ -607,11 +577,8 @@ EOT
   "@version": "alertapi-0.1",
   "@type": "ALERT",
   "object": "XDS Error Event",
-  "severity": "CRITICAL",
-  "project_id": "${var.project_id}",
-  "pod_name": "${resource.label.pod_name}",
-  "container_name": "${resource.label.container_name}",
-  "text": "${var.project_id} xMatters XDS ERROR Alert - Pod: ${resource.labels.pod_name}, Container: ${resource.labels.container_name}"
+  "severity": "WARNING",
+  "text": "${var.project_id} xMatters XDS ERROR Alert"
 }
 EOT
     mime_type = "text/markdown"
