@@ -88,3 +88,35 @@ vm_cpu_utilization_doc.tpl
   "@type": "ALERT"
 }
 
+
+
+
+sql_memory_utilization_doc.tpl
+{
+  "severity": "WARNING",
+  "text": "🚨 **Cloud SQL High Memory Utilization Alert Triggered**\n\n- **Instance ID**: $${resource.labels.database_id}\n- **Region**: $${resource.labels.region}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n- **Threshold Set**: $${threshold_value}\n- **Memory Usage (%)**: $${value}\n- **Start Time**: $${start_time}\n\n⚠️ Please investigate the Cloud SQL instance memory usage immediately.",
+  "object": "Cloud SQL Memory Utilization",
+  "@key": "cloudsql-mem-alert-uuid",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
+
+sql_cpu_utilization_doc.tpl
+{
+  "severity": "WARNING",
+  "text": "🚨 **Cloud SQL High CPU Utilization Alert Triggered**\n\n- **Instance ID**: $${resource.labels.database_id}\n- **Region**: $${resource.labels.region}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n- **Threshold Set**: $${threshold_value}\n- **CPU Usage (%)**: $${value}\n- **Start Time**: $${start_time}\n\n⚠️ Please investigate the Cloud SQL instance CPU usage immediately.",
+  "object": "Cloud SQL CPU Utilization",
+  "@key": "cloudsql-cpu-alert-uuid",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
+
+documentation {
+  content = templatefile("${path.module}/alert_docs/sql_memory_utilization_doc.tpl", {
+    project_id = var.project_id
+  })
+  mime_type = "text/markdown"
+}
+
