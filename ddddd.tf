@@ -53,3 +53,38 @@ EOT
   "@type": "ALERT"
 }
 
+
+
+
+flink_error_logs_doc.tpl
+{
+  "severity": "WARNING",
+  "text": "🚨 **Flink Job Error Alert Triggered**\n\n- **Flink Job Name**: $${labels.job_name}\n- **Flink Pod Name**: $${resource.labels.pod_name}\n- **Namespace**: $${resource.labels.namespace_name}\n- **Cluster Name**: $${resource.labels.cluster_name}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n- **Threshold Set**: $${threshold_value}\n- **Triggered Value**: $${value}\n- **Start Time**: $${start_time}\n\n⚠️ Please investigate the failing Flink job and associated resources.",
+  "object": "Flink Job Error",
+  "@key": "flink-job-alert-uuid",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
+
+xds_error_logs_doc.tpl
+{
+  "severity": "WARNING",
+  "text": "🚨 **XDS Error Detected**\n\n- **XDS Pod Name**: $${resource.labels.pod_name}\n- **Namespace**: $${resource.labels.namespace_name}\n- **Cluster Name**: $${resource.labels.cluster_name}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n- **Threshold Set**: $${threshold_value}\n- **Triggered Value**: $${value}\n- **Start Time**: $${start_time}\n\n⚠️ Please investigate this XDS-related issue immediately.",
+  "object": "XDS Error Logs",
+  "@key": "xds-alert-uuid",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
+
+vm_cpu_utilization_doc.tpl
+{
+  "severity": "WARNING",
+  "text": "🚨 **High CPU Utilization Alert Triggered**\n\n- **Instance Name**: $${resource.labels.instance_name}\n- **Instance ID**: $${resource.labels.instance_id}\n- **Zone**: $${resource.labels.zone}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n- **Threshold Set**: $${threshold_value}\n- **Actual CPU Usage**: $${value}\n- **Start Time**: $${start_time}\n\n⚠️ Please investigate the affected VM immediately.",
+  "object": "VM CPU Utilization",
+  "@key": "cpu-util-alert-uuid",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
