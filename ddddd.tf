@@ -120,3 +120,13 @@ documentation {
   mime_type = "text/markdown"
 }
 
+vm_high_cpu_utilization_doc.tpl
+{
+  "severity": "WARNING",
+  "text": "🚨 **VM High CPU Utilization Alert Triggered**\n\n- **Instance Name**: $${resource.labels.instance_id}\n- **Zone**: $${resource.labels.zone}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n- **Threshold Set**: $${threshold_value}\n- **CPU Usage (%)**: $${value}\n- **Start Time**: $${start_time}\n\n⚠️ Please investigate the high CPU usage on the virtual machine immediately.",
+  "object": "VM CPU Utilization",
+  "@key": "vm-cpu-alert-uuid",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
