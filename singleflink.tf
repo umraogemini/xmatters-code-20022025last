@@ -161,3 +161,12 @@ resource.labels.container_name = "flink-kubernetes-operator"
 resource.labels.namespace_name =~ "ecosystem-flink-.*"
 textPayload =~ "Event\\s+\\|.*JOBSTATUSCHANGED.*to FAILED.*nil"
 
+
+
+resource.type = "k8s_container"
+resource.labels.namespace_name = "ecosystem-flink-dev"
+resource.labels.container_name = "flink-kubernetes-operator"
+textPayload =~ "RESTOREFAILED|JobExecutionException|FAILED|Restarting"
+
+
+textPayload =~ "Warning.+(RESTOREFAILED|JobExecutionException|FAILED|Restarting)"
