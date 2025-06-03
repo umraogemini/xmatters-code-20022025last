@@ -143,3 +143,12 @@ resource.type = "k8s_container"
 resource.labels.namespace_name = "ecosystem-flink-prod"
 resource.labels.container_name = "flink-jobmanager"
 (textPayload =~ "JobExecutionException" OR textPayload =~ "Task.*failed" OR textPayload =~ "Restarting.*job")
+
+
+
+resource.type = "k8s_container"
+resource.labels.namespace_name = "ecosystem-flink-prod"
+resource.labels.container_name = "flink-jobmanager"
+severity = "WARNING"
+textPayload =~ "checkpoint|backpressure|retries|retrying|timed out|partitions.*unavailable"
+
