@@ -132,3 +132,8 @@ resource.labels.namespace_name =~ "ecosystem-flink-.+"
 textPayload =~ "Event\\s+\\.+JOBSTATUSCHANGED.+to FAILED"
 textPayload =~ "nill"
 
+
+resource.type = "k8s_container"
+resource.labels.namespace_name = "ecosystem-flink-prod"
+resource.labels.container_name = "flink-jobmanager"
+textPayload =~ "JobExecutionException|Task.*failed|Restarting.*job"
