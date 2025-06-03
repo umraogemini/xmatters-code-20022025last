@@ -1,7 +1,6 @@
 # ================================
 # Provider Configuration
 # ================================
-
 provider "google" {
   project = var.project_id
   region  = var.region
@@ -10,7 +9,6 @@ provider "google" {
 # ================================
 # Secret Manager for Auth
 # ================================
-
 data "google_secret_manager_secret_version" "xmatters_auth_username" {
   secret  = "xMatters_Auth_Username"
   project = var.project_id
@@ -24,7 +22,6 @@ data "google_secret_manager_secret_version" "xmatters_auth_password" {
 # ============================================
 # Notification Channels (xMatters & Email)
 # ============================================
-
 resource "google_monitoring_notification_channel" "xmatters_webhook" {
   display_name = "xMatters Webhook Testing one"
   type         = "webhook_basicauth"
@@ -53,7 +50,6 @@ resource "google_monitoring_notification_channel" "email" {
 # ===============================
 # Log-Based Metric: Flink Logs
 # ===============================
-
 resource "google_logging_metric" "flink_log_alert_metric" {
   name        = "Flink_Log_Errorstesting"
   description = "Tracks Flink job error logs"
@@ -78,7 +74,6 @@ EOT
 # ===============================
 # Alert Policy: Flink Log Errors
 # ===============================
-
 resource "google_monitoring_alert_policy" "flink_log_alert_policy" {
   display_name = "Flink-errortesting"
   combiner     = "OR"
@@ -94,9 +89,10 @@ resource "google_monitoring_alert_policy" "flink_log_alert_policy" {
     display_name = "Flink log"
 
     condition_threshold {
-      filter = <<EOT
-resource.type = "k8s_container" AND metric.type = "logging.googleapis.com/user/${google_logging_metric.flink_log_alert_metric.name}"
-EOT
+      filter = format(
+        "resource.type = \"k8s_container\" AND metric.type = \"logging.googleapis.com/user/%s\"",
+        google_logging_metric.flink_log_alert_metric.name
+      )
 
       comparison      = "COMPARISON_GT"
       threshold_value = 0
@@ -119,11 +115,11 @@ EOT
   }
 
   documentation {
-  content = templatefile("${path.module}/alert_docs/flink_error_logs_doc.tpl", {
-    project_id = var.project_id
-  })
-  mime_type = "text/markdown"
-}
+    content = templatefile("${path.module}/alert_docs/flink_error_logs_doc.tpl", {
+      project_id = var.project_id
+    })
+    mime_type = "text/markdown"
+  }
 
   user_labels = {}
 }
