@@ -123,3 +123,12 @@ resource "google_monitoring_alert_policy" "flink_log_alert_policy" {
 
   user_labels = {}
 }
+
+
+resource.type = "k8s_container"
+resource.labels.cluster_name = "trayplat"
+resource.labels.container_name = "flink-kuberneten-operator"
+resource.labels.namespace_name =~ "ecosystem-flink-.+"
+textPayload =~ "Event\\s+\\.+JOBSTATUSCHANGED.+to FAILED"
+textPayload =~ "nill"
+
