@@ -152,3 +152,12 @@ resource.labels.container_name = "flink-jobmanager"
 severity = "WARNING"
 textPayload =~ "checkpoint|backpressure|retries|retrying|timed out|partitions.*unavailable"
 
+
+
+
+resource.type = "k8s_container"
+resource.labels.cluster_name = "trsyplat"
+resource.labels.container_name = "flink-kubernetes-operator"
+resource.labels.namespace_name =~ "ecosystem-flink-.*"
+textPayload =~ "Event\\s+\\|.*JOBSTATUSCHANGED.*to FAILED.*nil"
+
