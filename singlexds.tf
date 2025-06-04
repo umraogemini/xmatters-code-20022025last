@@ -9,14 +9,21 @@ provider "google" {
 # ===========================
 # Secret Manager for Auth
 # ===========================
-data "google_secret_manager_secret_version" "xmatters_auth" {
-  secret  = "xmatters_auth_passwd"
+
+data "google_secret_manager_secret_version" "xmatters_auth_username" {
+  secret  = "xMatters_Auth_User"
+  project = var.project_id
+}
+
+data "google_secret_manager_secret_version" "xmatters_auth_password" {
+  secret  = "xMatters_Auth_Passwd"
   project = var.project_id
 }
 
 # ============================================
 # Notification Channels (xMatters & Email)
 # ============================================
+
 resource "google_monitoring_notification_channel" "xmatters_webhook" {
   display_name = "xMatters Webhook"
   type         = "webhook_basicauth"
@@ -24,11 +31,11 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
 
   labels = {
     url      = var.xmatters_webhook_url
-    username = "BC000010001"
+    username = data.google_secret_manager_secret_version.xmatters_auth_username.secret_data
   }
 
   sensitive_labels {
-    password = data.google_secret_manager_secret_version.xmatters_auth.secret_data
+    password = data.google_secret_manager_secret_version.xmatters_auth_password.secret_data
   }
 }
 
