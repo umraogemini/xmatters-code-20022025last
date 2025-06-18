@@ -1,0 +1,304 @@
+Sample Ansible Playbook: Install Apache Web Server
+
+---
+- name: Install and Configure Apache Web Server
+  hosts: webservers
+  become: true
+
+  vars:
+    apache_port: 80
+    index_file: /var/www/html/index.html
+
+  tasks:
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: present
+
+    - name: Start and enable Apache service
+      service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Deploy a simple index.html file
+      copy:
+        dest: "{{ index_file }}"
+        content: |
+          <html>
+          <head><title>Welcome</title></head>
+          <body>
+            <h1>Hello from Ansible!</h1>
+          </body>
+          </html>
+        owner: apache
+        group: apache
+        mode: '0644'
+      notify: Restart Apache
+
+    - name: Open port {{ apache_port }} in firewalld
+      firewalld:
+        port: "{{ apache_port }}/tcp"
+        permanent: true
+        state: enabled
+        immediate: true
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: httpd
+        state: restarted
+
+
+
+Sample Python Program: Employee Management System
+
+# employee_manager.py
+
+class Employee:
+    def __init__(self, emp_id, name, department):
+        self.emp_id = emp_id
+        self.name = name
+        self.department = department
+
+    def __str__(self):
+        return f"{self.emp_id}, {self.name}, {self.department}"
+
+
+class EmployeeManager:
+    def __init__(self, filename='employees.txt'):
+        self.filename = filename
+
+    def add_employee(self, employee):
+        try:
+            with open(self.filename, 'a') as file:
+                file.write(str(employee) + '\n')
+            print(f"Employee {employee.name} added.")
+        except Exception as e:
+            print(f"Error writing to file: {e}")
+
+    def list_employees(self):
+        try:
+            with open(self.filename, 'r') as file:
+                print("Current Employees:")
+                for line in file:
+                    print(line.strip())
+        except FileNotFoundError:
+            print("No employees found. File does not exist.")
+        except Exception as e:
+            print(f"Error reading file: {e}")
+
+
+# Sample usage
+if __name__ == "__main__":
+    manager = EmployeeManager()
+
+    # Add new employees
+    emp1 = Employee(101, "Alice", "HR")
+    emp2 = Employee(102, "Bob", "IT")
+
+    manager.add_employee(emp1)
+    manager.add_employee(emp2)
+
+    # List all employees
+    manager.list_employees()
+
+
+Python Flask App – Dockerfile
+
+Base image
+FROM python:3.10-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY . .
+
+# Expose app port
+EXPOSE 5000
+
+# Start the Flask app
+CMD ["python", "app.py"]
+
+requirements.txt
+
+flask
+
+app.py
+
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return "Hello from Flask in Docker!"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+
+---
+
+
+k8s-deployment.yaml — Sample Kubernetes Cluster Resources
+
+# 1. Create a Namespace (optional)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-app
+
+---
+
+# 2. Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-deployment
+  namespace: demo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+        - name: demo-container
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+
+---
+
+# 3. Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-service
+  namespace: demo-app
+spec:
+  selector:
+    app: demo
+  type: LoadBalancer   # You can change this to ClusterIP or NodePort as needed
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+
+Here is a sample Terraform configuration that you can use in interviews. It’s simple, clean, and highlights key concepts like:
+
+Provider
+
+Resource creation
+
+Variables
+
+Outputs
+
+
+
+---
+
+✅ Sample Terraform Code: Create an AWS EC2 Instance
+
+📄 main.tf
+
+provider "aws" {
+  region = var.aws_region
+}
+
+resource "aws_instance" "web" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+
+  tags = {
+    Name = "DemoInstance"
+  }
+}
+
+
+---
+
+📄 variables.tf
+
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  default     = "us-east-1"
+}
+
+variable "ami_id" {
+  description = "AMI ID for the EC2 instance"
+  default     = "ami-0c02fb55956c7d316" # Amazon Linux 2 in us-east-1
+}
+
+variable "instance_type" {
+  description = "Type of EC2 instance"
+  default     = "t2.micro"
+}
+
+
+---
+
+📄 outputs.tf
+
+output "instance_id" {
+  description = "ID of the created EC2 instance"
+  value       = aws_instance.web.id
+}
+
+output "public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.web.public_ip
+}
+
+
+---
+
+🚀 How to Use
+
+terraform init
+terraform plan
+terraform apply
+
+
+---
+
+🧠 What to Highlight in Interviews
+
+Use of provider, resource, variable, and output blocks
+
+Infrastructure as Code (IaC) principles
+
+Idempotent runs (terraform plan, apply)
+
+How Terraform state works
+
+Modularity (could be turned into a module)
+
+
+
+---
+
+If you'd like examples for:
+
+GCP / Azure resources
+
+Terraform with ServiceNow, GitHub, or Jenkins
+
+Terraform modules
+
+Using locals, count, for_each, or provisioners
+
+
+Just let me know — I can create interview-ready samples for those too!
+
