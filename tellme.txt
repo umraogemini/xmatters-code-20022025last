@@ -1,0 +1,45 @@
+Hi,
+Thank you for giving me this opportunity.
+My name is Uma Maheswara. I started my career in the IT industry in 2015 with Wipro
+Technologies. During my time at Wipro, I worked in various roles such as Software
+Engineer, Senior Software Engineer, and Lead Administrator for around 7 years. After
+Wipro, I joined Gemini Consulting & Services, where I worked for approximately 2 years.
+Later, I moved to Coforge, where I have been working from day one on the HSBC project
+(ET – Finance domain). In this project, I work closely with Kevin, Ajin, and Anup.
+In my current role, I handle the deployment, management, and automation of cloud
+infrastructure on GCP. I extensively work with services such as Compute Engine, Google
+Kubernetes Engine (GKE), Cloud Storage, Secret Manager, and Pub/Sub for messaging. I
+also set up and manage Cloud Monitoring and Cloud Logging to ensure system
+performance and availability.
+For infrastructure provisioning, I use Terraform to build, modify, and version
+infrastructure across GCP projects. My daily activities include managing Kubernetes
+clusters on GKE, writing Dockerfiles, building Docker images, pushing them to Google
+Container Registry (GCR), and deploying workloads using Kubernetes manifests and
+Helm charts.
+Regarding CI/CD, I work with Jenkins pipelines integrated with Bitbucket to automate
+Maven builds, perform SonarQube code analysis, build Docker images, and deploy
+them to GKE clusters as part of the pipeline process.
+In the HSBC project, I have successfully completed three automation initiatives:
+1. Log-Based Metrics with Alert Policies:
+Implemented various alerting conditions such as VM memory and CPU
+utilization, SQL memory and CPU utilization, Kubernetes error logs, and
+application errors (XDS and Flink). When any of these conditions are triggered,
+automated notifications are sent via email and xMatters. These alerting policies
+have been deployed across six environments and moved to production.
+2. Grafana and Prometheus Deployment:
+Successfully deployed Grafana and Prometheus across six environments
+and promoted them to production.
+When you use Prometheus and Grafana together, you get a powerful and easy
+way to monitor your system.
+Prometheus collects data like CPU usage, memory, disk space, and more.
+Grafana shows that data using beautiful graphs and charts.
+In short Prometheus watches your system. Grafana shows you what’s happening
+clearly and beautifully. Together, they make system monitoring easy and smart.
+3. CR (Change Request) Automation using ServiceNow:
+Automated the CR process by integrating with ServiceNow.
+In traditional setups, CRs are raised manually — someone logs into
+ServiceNow, fills multiple fields, selects options, attaches artifacts.
+Manual CR creation is time-consuming, error-prone, and sometimes
+missed.
+Automation using Groovy ensures 100% correct, consistent, and quick
+CR creation — without human involvement.
