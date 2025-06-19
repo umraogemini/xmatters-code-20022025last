@@ -103,3 +103,43 @@ If you want, I can:
 
 Let me know!
 
+
+
+To update Jira with sprint story points for the alerting Terraform code you shared, you can break down the work into logical tasks and assign estimated story points based on complexity, effort, and dependencies. Here's a suggested breakdown:
+
+
+---
+
+📝 Jira Story: Implement GCP Alerting Infrastructure for MEXPROD
+
+Description:
+
+Set up log-based metrics, alert policies, and notification channels using Terraform for MEXPROD, including integration with xMatters and email notifications.
+
+
+---
+
+🔹 Task Breakdown & Suggested Story Points:
+
+Task	Description	Est. Story Points
+
+1. Provider & Project Setup	Configure Google provider and initialize variables.	1 SP
+2. Log-Based Metrics	Create log-based metrics (Kube errors, Flink, XDS) with filters.	3 SP
+3. Secret Manager Integration	Reference secret manager for xMatters credentials.	2 SP
+4. Notification Channels	Configure xMatters and email notification channels.	2 SP
+5. Alert Policies – Kube Errors & VM Metrics	Create alert policies for Kube logs, VM memory & CPU utilization.	3 SP
+6. Alert Policies – Cloud SQL Alerts	Create alert policies for Cloud SQL CPU & memory.	3 SP
+7. Alert Policies – Flink Logs & XDS Errors	Define alert policies for Flink error logs and XDS error codes.	3 SP
+8. Documentation Blocks	Add JSON documentation blocks inside each policy.	1 SP
+9. Validation & Testing	Validate Terraform and test alert functionality in GCP.	2 SP
+10. Code Review & GitHub Push	Final review, push to GitHub, PR raised.	1 SP
+
+
+
+---
+
+✅ Total Story Points: ~21 SP
+
+You can split this across multiple sub-tasks in Jira if needed. If you want, I can help you write a formatted Jira story or task description too.
+
+
