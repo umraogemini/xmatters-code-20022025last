@@ -130,3 +130,15 @@ vm_high_cpu_utilization_doc.tpl
   "@type": "ALERT"
 }
 
+
+
+
+{
+  "severity": "WARNING",
+  "text": "**Kubernetes Error Log Alert Triggered**\n\n- **Cluster Name**: $${resource.labels.cluster_name}\n- **Namespace**: $${resource.labels.namespace_name}\n- **Pod Name**: $${resource.labels.pod_name}\n- **Container Name**: $${resource.labels.container_name}\n- **Project ID**: $${resource.labels.project_id}\n- **Resource Type**: $${resource.type}\n- **Metric Type**: $${metric.type}\n- **Condition Name**: $${condition.name}\n- **Metric Display Name**: $${metric.display_name}\n\n Please investigate the affected Kubernetes workload.",
+  "object": "Kubernetes Error Logs",
+  "@key": "6b89d199-64cd-4ec4-ab7d-7514c92283be",
+  "@version": "alertapi-0.1",
+  "@type": "ALERT"
+}
+
